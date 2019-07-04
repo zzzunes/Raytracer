@@ -17,3 +17,11 @@ bool Sphere::ray_intersect(const Vec3f& ray_origin, const Vec3f& direction, floa
 	if (object_distance < 0) object_distance = inside_point;
 	return object_distance > 0;
 }
+
+Vec3f& Sphere::get_center() {
+	return this->center;
+}
+
+Material& Sphere::get_material() {
+	return this->material;
+}
