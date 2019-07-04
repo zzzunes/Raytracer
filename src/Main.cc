@@ -2,13 +2,11 @@
 #include <memory>
 #include <fstream>
 #include <Raytracer.hh>
-#include <geometry.hh>
+#include <Geometry.hh>
 
 int main() {
 	std::unique_ptr<Raytracer> raytracer = std::make_unique<Raytracer>();
-	std::string output = raytracer->create_string_for_ppm();
-	std::ofstream out("output.ppm");
-	out << output;
-	out.close();
-	return 0;
+	Sphere sphere(Vec3f(-3, 0, -16), 2);
+	raytracer->render(sphere);
+	exit(EXIT_SUCCESS);
 }

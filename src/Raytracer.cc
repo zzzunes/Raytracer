@@ -1,29 +1,44 @@
 #include <string>
 #include <Raytracer.hh>
-#include "geometry.hh"
+#include <Geometry.hh>
+#include <Sphere.hh>
+#include <fstream>
 
-std::string Raytracer::create_string_for_ppm() {
-	std::string ppm_file_content;
-	int columns = 1080;
-	int rows = 720;
-	ppm_file_content.append("P3\n");
-	ppm_file_content.append(std::to_string(columns));
-	ppm_file_content.append(" ");
-	ppm_file_content.append(std::to_string(rows));
-	ppm_file_content.append("\n255\n");
-	for (int i = rows-1; i >= 0; i--) {
-		for (int j = 0; j < columns; j++) {
-			Vec3f color(float(j) / float(columns), float(i) / float(rows), 0.2);
-			int rounded_red = int(259.99 * color[0]);
-			int rounded_green = int(255.99 * color[1]);
-			int rounded_blue = int(255.99 * color[2]);
-			ppm_file_content.append(std::to_string(rounded_red));
-			ppm_file_content.append(" ");
-			ppm_file_content.append(std::to_string(rounded_green));
-			ppm_file_content.append(" ");
-			ppm_file_content.append(std::to_string(rounded_blue));
-			ppm_file_content.append("\n");
+#define WIDTH 1024
+#define HEIGHT 768
+#define FOV (M_PI / 2.0)
+#define BACKGROUND_COLOR Vec3f(0.2, 0.7, 0.8)
+#define GREEN Vec3f(0, 1, 0)
+
+Vec3f Raytracer::cast_ray(const Vec3f& ray_origin, const Vec3f& direction, const Sphere& object) {
+	float object_distance = std::numeric_limits<float>::max();
+	if (!object.ray_intersect(ray_origin, direction, object_distance)) {
+		return BACKGROUND_COLOR;
+	}
+	return GREEN;
+}
+
+void Raytracer::render(const Sphere& object) {
+	std::vector<Vec3f> framebuffer(WIDTH * HEIGHT);
+	for (size_t i = 0; i < HEIGHT; i++) {
+		for (size_t j = 0; j < WIDTH; j++) {
+			float x = (2 * (j + 0.5) / (float) WIDTH - 1) * tan(FOV / 2.0)
+						* WIDTH / (float) HEIGHT;
+			float y = -(2 * (i + 0.5) / (float) HEIGHT - 1) * tan(FOV / 2.0);
+			Vec3f direction = Vec3f(x, y, -1).normalize();
+			framebuffer[j + (i * WIDTH)] = cast_ray(Vec3f(0, 0, 0), direction, object);
 		}
 	}
-	return ppm_file_content;
+	write_to_file(framebuffer);
+}
+
+void Raytracer::write_to_file(std::vector<Vec3f> framebuffer) {
+	std::ofstream out("output.ppm");
+	out << "P6\n" << WIDTH << " " << HEIGHT << "\n255\n";
+	for (size_t i = 0; i < WIDTH * HEIGHT; i++) {
+		for (size_t j = 0; j < 3; j++) {
+			out << (char) (255 * std::max(0.0f, std::min(1.0f, framebuffer[i][j])));
+		}
+	}
+	out.close();
 }
