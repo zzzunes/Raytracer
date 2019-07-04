@@ -6,7 +6,7 @@
 
 int main() {
 	std::unique_ptr<Raytracer> raytracer = std::make_unique<Raytracer>();
-	Sphere sphere(Vec3f(-3, 0, -16), 2);
+	Sphere sphere(Vec3f(-6, 1, -10), 2);
 	raytracer->render(sphere);
 	exit(EXIT_SUCCESS);
 }
