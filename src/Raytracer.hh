@@ -1,10 +1,14 @@
 #ifndef RAYTRACER_RAYTRACER_HH
 #define RAYTRACER_RAYTRACER_HH
 
-
 class Raytracer {
+private:
+
 public:
-	Raytracer() = default;
+	Raytracer() {
+
+	}
+	std::string create_string_for_ppm();
 };
 
 
