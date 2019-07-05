@@ -1,8 +1,8 @@
-#ifndef RAYTRACER_RAYTRACER_HH
-#define RAYTRACER_RAYTRACER_HH
+#ifndef RAYTRACER_RAYTRACER_H
+#define RAYTRACER_RAYTRACER_H
 
-#include <Sphere.hh>
-#include <Light.hh>
+#include <sphere.h>
+#include <light.h>
 
 class Raytracer {
 private:
@@ -16,4 +16,4 @@ public:
 	void render(const std::vector<Sphere>& objects, const std::vector<Light>& lights);
 };
 
-#endif /* RAYTRACER_RAYTRACER_HH */
+#endif /*RAYTRACER_RAYTRACER_H*/

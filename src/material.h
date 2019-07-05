@@ -1,7 +1,7 @@
-#ifndef RAYTRACER_MATERIAL_HH
-#define RAYTRACER_MATERIAL_HH
+#ifndef RAYTRACER_MATERIAL_H
+#define RAYTRACER_MATERIAL_H
 
-#include <Geometry.hh>
+#include <geometry.h>
 
 class Material {
 	Vec3f diffuse_color;
@@ -13,4 +13,4 @@ public:
 	}
 };
 
-#endif /* RAYTRACER_MATERIAL_HH */
+#endif /*RAYTRACER_MATERIAL_H*/

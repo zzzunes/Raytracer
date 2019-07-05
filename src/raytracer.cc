@@ -1,9 +1,9 @@
 #include <string>
-#include <Raytracer.hh>
-#include <Geometry.hh>
-#include <Sphere.hh>
+#include <raytracer.h>
+#include <geometry.h>
+#include <sphere.h>
 #include <fstream>
-#include <Light.hh>
+#include <light.h>
 
 #define WIDTH 1280
 #define HEIGHT 720

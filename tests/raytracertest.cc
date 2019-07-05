@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include <Raytracer.hh>
-#include <Sphere.hh>
+#include <raytracer.h>
+#include <sphere.h>
 
 TEST(Raytracer_tests, RaytracerCreation_ReturnsValid) {
 	std::unique_ptr<Raytracer> raytracer = std::make_unique<Raytracer>();

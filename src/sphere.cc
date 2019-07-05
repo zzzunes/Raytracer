@@ -1,5 +1,5 @@
-#include <Geometry.hh>
-#include <Sphere.hh>
+#include <geometry.h>
+#include <sphere.h>
 
 bool Sphere::ray_intersect(const Vec3f& ray_origin, const Vec3f& direction, float& object_distance) const {
 	Vec3f ray_origin_to_object_center = this->center - ray_origin;

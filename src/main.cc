@@ -1,8 +1,8 @@
 #include <iostream>
 #include <memory>
 #include <fstream>
-#include <Raytracer.hh>
-#include <Geometry.hh>
+#include <raytracer.h>
+#include <geometry.h>
 
 int main() {
 	Material ivory(Vec3f(0.4, 0.4, 0.3));

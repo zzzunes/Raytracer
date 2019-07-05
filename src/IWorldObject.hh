@@ -1,8 +1,0 @@
-#ifndef RAYTRACER_IWORLDOBJECT_HH
-#define RAYTRACER_IWORLDOBJECT_HH
-
-class IWorldObject {
-
-};
-
-#endif /*RAYTRACER_IWORLDOBJECT_HH*/

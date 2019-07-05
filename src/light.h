@@ -1,7 +1,7 @@
-#ifndef RAYTRACER_LIGHT_HH
-#define RAYTRACER_LIGHT_HH
+#ifndef RAYTRACER_LIGHT_H
+#define RAYTRACER_LIGHT_H
 
-#include <Geometry.hh>
+#include <geometry.h>
 
 class Light {
 private:
@@ -17,4 +17,4 @@ public:
 	}
 };
 
-#endif /* RAYTRACER_LIGHT_HH */
+#endif /*RAYTRACER_LIGHT_H*/

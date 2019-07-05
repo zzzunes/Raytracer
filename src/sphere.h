@@ -1,11 +1,10 @@
-#ifndef RAYTRACER_SPHERE_HH
-#define RAYTRACER_SPHERE_HH
+#ifndef RAYTRACER_SPHERE_H
+#define RAYTRACER_SPHERE_H
 
-#include <Geometry.hh>
-#include <IWorldObject.hh>
-#include <Material.hh>
+#include <geometry.h>
+#include <material.h>
 
-class Sphere : IWorldObject {
+class Sphere {
 	Vec3f center;
 	float radius;
 	Material material;
@@ -17,4 +16,4 @@ public:
 	Material& get_material();
 };
 
-#endif /* RAYTRACER_SPHERE_HH */
+#endif /*RAYTRACER_SPHERE_H*/

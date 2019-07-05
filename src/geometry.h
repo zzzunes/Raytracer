@@ -1,5 +1,5 @@
-#ifndef RAYTRACER_GEOMETRY_HH
-#define RAYTRACER_GEOMETRY_HH
+#ifndef RAYTRACER_GEOMETRY_H
+#define RAYTRACER_GEOMETRY_H
 
 #include <cmath>
 #include <vector>
@@ -81,4 +81,4 @@ template <size_t DIM, typename T> std::ostream& operator<<(std::ostream& out, co
 	return out ;
 }
 
-#endif /*RAYTRACER_GEOMETRY_HH*/
+#endif /*RAYTRACER_GEOMETRY_H*/
