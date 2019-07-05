@@ -14,8 +14,11 @@ int main() {
 	spheres.emplace_back(Sphere(Vec3f(1.5, -0.5, -18), 3, red_rubber));
 	spheres.emplace_back(Sphere(Vec3f(7, 5, -18), 4, ivory));
 
+	std::vector<Light> lights;
+	lights.emplace_back(Vec3f(-20, 20, 20), 1.5);
+
 	std::unique_ptr<Raytracer> raytracer = std::make_unique<Raytracer>();
-	raytracer->render(spheres);
+	raytracer->render(spheres, lights);
 
 	exit(EXIT_SUCCESS);
 }

@@ -3,6 +3,7 @@
 #include <Geometry.hh>
 #include <Sphere.hh>
 #include <fstream>
+#include <Light.hh>
 
 #define WIDTH 1280
 #define HEIGHT 720
@@ -11,17 +12,24 @@
 #define PPM_COLUMNS 3
 #define BACKGROUND_COLOR Vec3f(0.1, 0.2, 0.5);
 
-Vec3f Raytracer::cast_ray(const Vec3f& ray_origin, const Vec3f& direction, const std::vector<Sphere>& objects) {
+Vec3f Raytracer::cast_ray(const Vec3f& ray_origin,
+		const Vec3f& direction, const std::vector<Sphere>& objects, const std::vector<Light>& lights) {
 	Vec3f point;
 	Vec3f normal;
 	Material material;
 	if(!scene_intersect(ray_origin, direction, objects, point, normal, material)) {
 		return BACKGROUND_COLOR;
 	}
-	return material.get_diffuse_color();
+	float diffuse_light_intensity = 0;
+	for (Light light : lights) {
+		Vec3f light_direction = (light.get_position() - point).normalize();
+		diffuse_light_intensity += light.get_intensity() * std::max(0.0f, light_direction * normal);
+	}
+	return material.get_diffuse_color() * diffuse_light_intensity;
 }
 
-bool Raytracer::scene_intersect(const Vec3f& ray_origin, const Vec3f& direction, const std::vector<Sphere>& objects, Vec3f& hit, Vec3f& normal, Material& material) {
+bool Raytracer::scene_intersect(const Vec3f& ray_origin, const Vec3f& direction,
+		const std::vector<Sphere>& objects, Vec3f& hit, Vec3f& normal, Material& material) {
 	float farthest_objects_distance = std::numeric_limits<float>::max();
 	for (Sphere sphere : objects) {
 		float current_object_distance;
@@ -36,7 +44,7 @@ bool Raytracer::scene_intersect(const Vec3f& ray_origin, const Vec3f& direction,
 	return farthest_objects_distance < std::numeric_limits<float>::max();
 }
 
-void Raytracer::render(const std::vector<Sphere>& objects) {
+void Raytracer::render(const std::vector<Sphere>& objects, const std::vector<Light>& lights) {
 	std::vector<Vec3f> framebuffer(SCREEN_SIZE);
 	for (int i = 0; i < HEIGHT; i++) {
 		for (int j = 0; j < WIDTH; j++) {
@@ -44,7 +52,7 @@ void Raytracer::render(const std::vector<Sphere>& objects) {
 			float ray_y = -(2 * (i + 0.5) / (float) HEIGHT - 1) * tan(FOV / 2.0);
 
 			Vec3f direction = Vec3f(ray_x, ray_y, -1).normalize();
-			Vec3f color_result = cast_ray(Vec3f(0, 0, 0), direction, objects);
+			Vec3f color_result = cast_ray(Vec3f(0, 0, 0), direction, objects, lights);
 			framebuffer[j + (i * WIDTH)] = color_result;
 		}
 	}
