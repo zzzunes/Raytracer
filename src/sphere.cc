@@ -13,7 +13,7 @@ bool Sphere::ray_intersect(const Vec3f& ray_origin, const Vec3f& direction, floa
 
 	if (distance_from_ray_to_object_center_squared > radius_squared) return false;
 
-	float distance_to_outside_of_the_sphere = radius_squared - distance_from_ray_to_object_center_squared;
+	float distance_to_outside_of_the_sphere = sqrtf(radius_squared - distance_from_ray_to_object_center_squared);
 	float front_hit_point = distance - distance_to_outside_of_the_sphere;
 	float exit_hit_point = distance + distance_to_outside_of_the_sphere;
 

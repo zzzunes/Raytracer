@@ -40,11 +40,7 @@ Vec3f Raytracer::cast_ray(const Vec3f& ray_origin, const Vec3f& direction, const
 		Vec3f light_direction = (light.get_position() - hit_point).normalize();
 		float light_distance = (light.get_position() - hit_point).norm();
 
-		Vec3f shadow_orig = light_direction*normal < 0 ? hit_point - normal*1e-3 : hit_point + normal*1e-3; // checking if the point lies in the shadow of the lights[i]
-		Vec3f shadow_pt, shadow_N;
-		Material tmpmaterial;
-		if (scene_intersect(shadow_orig, light_direction, spheres, shadow_pt, shadow_N, tmpmaterial) && (shadow_pt-shadow_orig).norm() < light_distance)
-			continue;
+		if (is_shadowed(light_direction, light_distance, hit_point, normal, spheres)) continue;
 
 		diffuse_light_intensity += light.get_intensity() * std::max(0.0f, dot_product(light_direction, normal));
 		Vec3f reflected_direction = reflect(light_direction, normal);
@@ -58,6 +54,19 @@ Vec3f Raytracer::cast_ray(const Vec3f& ray_origin, const Vec3f& direction, const
 	specular_lighting = scale_vector(specular_lighting, specular_light_intensity);
 	specular_lighting = scale_vector(specular_lighting, material.get_albedo().y);
 	return diffused_lighting + specular_lighting;
+}
+
+bool Raytracer::is_shadowed(const Vec3f& light_direction, const float& light_distance, const Vec3f& hit_point, const Vec3f& normal, const std::vector<Sphere>& spheres) {
+	/* The purpose of gently shifting the origin is to avoid intersecting with our object at our origin point. */
+	bool light_and_normal_in_same_direction = dot_product(light_direction, normal) > 0;
+	Vec3f shifted_normal = scale_vector(normal, 1e-3);
+	Vec3f shadow_origin = light_and_normal_in_same_direction ? hit_point + shifted_normal : hit_point - shifted_normal;
+
+	Vec3f shadow_point;
+	Vec3f shadow_normal;
+	Material tmp_material;
+	return scene_intersect(shadow_origin, light_direction, spheres, shadow_point, shadow_normal, tmp_material) &&
+		   (shadow_point - shadow_origin).norm() < light_distance;
 }
 
 bool Raytracer::scene_intersect(const Vec3f& ray_origin, const Vec3f& direction, const std::vector<Sphere>& spheres, Vec3f& hit, Vec3f& normal, Material& material) {
