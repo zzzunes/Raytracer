@@ -1,5 +1,11 @@
 # Raytracer
 
+# Shadowing
+
+![Alt text](/screenshots/FirstShadows.png?raw=true "Shadows completed!")
+
+To darken the areas where we want to create shadows, we have to imagine another line- this time originiating from our hit point. From the hit point, we need to draw a line to the light source. If we run into another object, then we know that we are in the shadow of another object. Therefore, we can skip the normal illumination sequence for this point in the framebuffer.
+
 # Specular Lighting
 
 ![Alt text](/screenshots/SpecularLighting.png?raw=true "First instance of specular lighting")
