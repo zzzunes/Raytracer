@@ -18,7 +18,6 @@ int main() {
 	lights.emplace_back(Vec3f(-20, 20, 20), 1.5);
 	lights.emplace_back(Vec3f(30, 20, -25), 1.8);
 	lights.emplace_back(Vec3f(30, 20, 30), 1.7);
-	lights.emplace_back(Vec3f(10, 50, 0), 1.2);
 
 	Raytracer::render(spheres, lights);
 
