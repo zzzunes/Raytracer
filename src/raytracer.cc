@@ -16,16 +16,23 @@ float Raytracer::dot_product(const Vec3f& vector_one, const Vec3f& vector_two) {
 	return vector_one * vector_two;
 }
 
-Vec3f Raytracer::reflect(const Vec3f& I, const Vec3f& normal) {
-	return I - normal * 2.0f * (dot_product(I, normal));
+Vec3f Raytracer::scale_vector(Vec3f vector, float scalar) {
+	return vector * scalar;
 }
 
-Vec3f Raytracer::cast_ray(const Vec3f& ray_origin, const Vec3f& direction, const std::vector<Sphere>& objects, const std::vector<Light>& lights) {
+Vec3f Raytracer::reflect(const Vec3f& surface_to_light, const Vec3f& surface_normal) {
+	float closeness_light_direction_surface_normal = dot_product(surface_to_light, surface_normal);
+	Vec3f reflection_direction = scale_vector(surface_normal, (2.0f * closeness_light_direction_surface_normal));
+	reflection_direction = reflection_direction - surface_to_light;
+	return reflection_direction;
+}
+
+Vec3f Raytracer::cast_ray(const Vec3f& ray_origin, const Vec3f& direction, const std::vector<Sphere>& spheres, const std::vector<Light>& lights) {
 	Vec3f point;
 	Vec3f normal;
 	Material material;
 
-	if(!scene_intersect(ray_origin, direction, objects, point, normal, material)) return BACKGROUND_COLOR;
+	if (!scene_intersect(ray_origin, direction, spheres, point, normal, material)) return BACKGROUND_COLOR;
 
 	float diffuse_light_intensity = 0;
 	float specular_light_intensity = 0;
@@ -36,8 +43,13 @@ Vec3f Raytracer::cast_ray(const Vec3f& ray_origin, const Vec3f& direction, const
 		float amount = dot_product(reflected, direction);
 		specular_light_intensity += powf(std::max(0.0f,  amount), material.get_specular_exponent());
 	}
-	return material.get_diffuse_color() * diffuse_light_intensity * material.get_albedo().x +
-			(Vec3f(1.0f, 1.0f, 1.0f) * specular_light_intensity * material.get_albedo().y);
+	Vec3f diffused_lighting = material.get_diffuse_color();
+	diffused_lighting = scale_vector(diffused_lighting, diffuse_light_intensity);
+	diffused_lighting = scale_vector(diffused_lighting, material.get_albedo().x);
+	Vec3f specular_lighting(1.0f, 1.0f, 1.0f);
+	specular_lighting = scale_vector(specular_lighting, specular_light_intensity);
+	specular_lighting = scale_vector(specular_lighting, material.get_albedo().y);
+	return diffused_lighting + specular_lighting;
 }
 
 bool Raytracer::scene_intersect(const Vec3f& ray_origin, const Vec3f& direction, const std::vector<Sphere>& spheres, Vec3f& hit, Vec3f& normal, Material& material) {
@@ -47,7 +59,7 @@ bool Raytracer::scene_intersect(const Vec3f& ray_origin, const Vec3f& direction,
 		bool object_is_rendered = sphere.ray_intersect(ray_origin, direction, current_object_distance);
 		if (object_is_rendered && current_object_distance < farthest_objects_distance) {
 			farthest_objects_distance = current_object_distance;
-			hit = ray_origin + (direction * current_object_distance);
+			hit = ray_origin + (scale_vector(direction, current_object_distance));
 			normal = (hit - sphere.get_center()).normalize();
 			material = sphere.get_material();
 		}
@@ -70,13 +82,16 @@ void Raytracer::render(const std::vector<Sphere>& objects, const std::vector<Lig
 	write_to_file(framebuffer);
 }
 
+void Raytracer::adjust_color_intensity(Vec3f& color_values) {
+	float strongest_color = std::max(color_values.x, std::max(color_values.y, color_values.z));
+	if (strongest_color > 1) color_values = color_values * (1.0f / strongest_color);
+}
+
 void Raytracer::write_to_file(std::vector<Vec3f> framebuffer) {
 	std::ofstream out("output.ppm");
 	out << "P6\n" << WIDTH << " " << HEIGHT << "\n255\n";
 	for (int i = 0; i < SCREEN_SIZE; i++) {
-		Vec3f& c = framebuffer[i];
-		float max = std::max(c.x, std::max(c.y, c.z));
-		if (max > 1) c = c * (1.0f / max);
+		adjust_color_intensity(framebuffer[i]);
 		for (int j = 0; j < PPM_COLUMNS; j++) {
 			out << (char) (255 * std::max(0.0f, std::min(1.0f, framebuffer[i][j])));
 		}

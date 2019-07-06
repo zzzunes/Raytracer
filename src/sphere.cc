@@ -17,10 +17,8 @@ bool Sphere::ray_intersect(const Vec3f& ray_origin, const Vec3f& direction, floa
 	float exit_hit_point = distance + distance_to_outside_of_the_sphere;
 
 	sphere_distance = front_hit_point;
-	bool front_hit_point_is_behind_ray = sphere_distance < 0;
-	if (front_hit_point_is_behind_ray) sphere_distance = exit_hit_point;
-	bool hit_point_is_in_front_of_ray = sphere_distance > 0;
-	return hit_point_is_in_front_of_ray;
+	if (sphere_distance < 0) sphere_distance = exit_hit_point;
+	return sphere_distance > 0;
 }
 
 Vec3f& Sphere::get_center() {
