@@ -16,7 +16,7 @@ float Raytracer::dot_product(const Vec3f& vector_one, const Vec3f& vector_two) {
 	return vector_one * vector_two;
 }
 
-Vec3f Raytracer::scale_vector(Vec3f vector, float scalar) {
+Vec3f Raytracer::scale_vector(const Vec3f& vector, const float& scalar) {
 	return vector * scalar;
 }
 
@@ -74,8 +74,9 @@ void Raytracer::render(const std::vector<Sphere>& objects, const std::vector<Lig
 			float ray_x = (2 * (j + 0.5) / (float) WIDTH - 1) * tan(FOV / 2.0) * WIDTH / (float) HEIGHT;
 			float ray_y = -(2 * (i + 0.5) / (float) HEIGHT - 1) * tan(FOV / 2.0);
 
+			Vec3f ray_origin(0, 0, 0);
 			Vec3f direction = Vec3f(ray_x, ray_y, -1).normalize();
-			Vec3f color_result = cast_ray(Vec3f(0, 0, 0), direction, objects, lights);
+			Vec3f color_result = cast_ray(ray_origin, direction, objects, lights);
 			framebuffer[j + (i * WIDTH)] = color_result;
 		}
 	}
@@ -87,7 +88,7 @@ void Raytracer::adjust_color_intensity(Vec3f& color_values) {
 	if (strongest_color > 1) color_values = color_values * (1.0f / strongest_color);
 }
 
-void Raytracer::write_to_file(std::vector<Vec3f> framebuffer) {
+void Raytracer::write_to_file(std::vector<Vec3f>& framebuffer) {
 	std::ofstream out("output.ppm");
 	out << "P6\n" << WIDTH << " " << HEIGHT << "\n255\n";
 	for (int i = 0; i < SCREEN_SIZE; i++) {
