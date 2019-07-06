@@ -2,7 +2,7 @@
 #include <raytracer.h>
 #include <sphere.h>
 
-Material black(Vec3f(1, 1, 1));
+Material black(Vec3f(1, 1, 1), Vec2f(0.6, 0.3), 50.0f);
 
 TEST(Raytracer_tests, RaytracerCreation_ReturnsValid) {
 	std::unique_ptr<Raytracer> raytracer = std::make_unique<Raytracer>();
