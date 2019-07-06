@@ -16,7 +16,7 @@ int main() {
 
 	std::vector<Light> lights;
 	lights.emplace_back(Vec3f(-20, 20, 20), 1.5);
-	lights.emplace_back(Vec3f(30, 20, -25), 1.8);
+	lights.emplace_back(Vec3f(30, 50, -25), 1.8);
 	lights.emplace_back(Vec3f(30, 20, 30), 1.7);
 
 	Raytracer::render(spheres, lights);

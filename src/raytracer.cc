@@ -10,7 +10,7 @@
 #define SCREEN_SIZE (WIDTH * HEIGHT)
 #define FOV (M_PI / 2.0)
 #define PPM_COLUMNS 3
-#define BACKGROUND_COLOR Vec3f(0.1, 0.2, 0.5);
+#define BACKGROUND_COLOR Vec3f(0.1, 0.2, 0.4);
 
 float Raytracer::dot_product(const Vec3f& vector_one, const Vec3f& vector_two) {
 	return vector_one * vector_two;
@@ -28,16 +28,24 @@ Vec3f Raytracer::reflect(const Vec3f& surface_to_light, const Vec3f& surface_nor
 }
 
 Vec3f Raytracer::cast_ray(const Vec3f& ray_origin, const Vec3f& direction, const std::vector<Sphere>& spheres, const std::vector<Light>& lights) {
-	Vec3f point;
+	Vec3f hit_point;
 	Vec3f normal;
 	Material material;
 
-	if (!scene_intersect(ray_origin, direction, spheres, point, normal, material)) return BACKGROUND_COLOR;
+	if (!scene_intersect(ray_origin, direction, spheres, hit_point, normal, material)) return BACKGROUND_COLOR;
 
 	float diffuse_light_intensity = 0;
 	float specular_light_intensity = 0;
 	for (Light light : lights) {
-		Vec3f light_direction = (light.get_position() - point).normalize();
+		Vec3f light_direction = (light.get_position() - hit_point).normalize();
+		float light_distance = (light.get_position() - hit_point).norm();
+
+		Vec3f shadow_orig = light_direction*normal < 0 ? hit_point - normal*1e-3 : hit_point + normal*1e-3; // checking if the point lies in the shadow of the lights[i]
+		Vec3f shadow_pt, shadow_N;
+		Material tmpmaterial;
+		if (scene_intersect(shadow_orig, light_direction, spheres, shadow_pt, shadow_N, tmpmaterial) && (shadow_pt-shadow_orig).norm() < light_distance)
+			continue;
+
 		diffuse_light_intensity += light.get_intensity() * std::max(0.0f, dot_product(light_direction, normal));
 		Vec3f reflected_direction = reflect(light_direction, normal);
 		float reflection_amount = dot_product(reflected_direction, direction);
