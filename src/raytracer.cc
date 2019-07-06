@@ -21,8 +21,8 @@ Vec3f Raytracer::scale_vector(const Vec3f& vector, const float& scalar) {
 }
 
 Vec3f Raytracer::reflect(const Vec3f& surface_to_light, const Vec3f& surface_normal) {
-	float closeness_light_direction_surface_normal = dot_product(surface_to_light, surface_normal);
-	Vec3f reflection_direction = scale_vector(surface_normal, (2.0f * closeness_light_direction_surface_normal));
+	float alignment_light_direction_surface_normal = dot_product(surface_to_light, surface_normal);
+	Vec3f reflection_direction = scale_vector(surface_normal, (2.0f * alignment_light_direction_surface_normal));
 	reflection_direction = reflection_direction - surface_to_light;
 	return reflection_direction;
 }
@@ -39,9 +39,9 @@ Vec3f Raytracer::cast_ray(const Vec3f& ray_origin, const Vec3f& direction, const
 	for (Light light : lights) {
 		Vec3f light_direction = (light.get_position() - point).normalize();
 		diffuse_light_intensity += light.get_intensity() * std::max(0.0f, dot_product(light_direction, normal));
-		Vec3f reflected = -reflect(-light_direction, normal);
-		float amount = dot_product(reflected, direction);
-		specular_light_intensity += powf(std::max(0.0f,  amount), material.get_specular_exponent());
+		Vec3f reflected_direction = reflect(light_direction, normal);
+		float reflection_amount = dot_product(reflected_direction, direction);
+		specular_light_intensity += powf(std::max(0.0f, reflection_amount), material.get_specular_exponent());
 	}
 	Vec3f diffused_lighting = material.get_diffuse_color();
 	diffused_lighting = scale_vector(diffused_lighting, diffuse_light_intensity);
