@@ -27,12 +27,17 @@ Vec3f Raytracer::reflect(const Vec3f& surface_to_light, const Vec3f& surface_nor
 	return reflection_direction;
 }
 
-Vec3f Raytracer::cast_ray(const Vec3f& ray_origin, const Vec3f& direction, const std::vector<Sphere>& spheres, const std::vector<Light>& lights) {
+Vec3f Raytracer::cast_ray(const Vec3f& ray_origin, const Vec3f& direction, const std::vector<Sphere>& spheres, const std::vector<Light>& lights, int depth = 0) {
 	Vec3f hit_point;
 	Vec3f normal;
 	Material material;
 
-	if (!scene_intersect(ray_origin, direction, spheres, hit_point, normal, material)) return BACKGROUND_COLOR;
+	if (depth > 4 || !scene_intersect(ray_origin, direction, spheres, hit_point, normal, material)) return BACKGROUND_COLOR;
+
+	Vec3f reflection_direction = reflect(direction, normal);
+	Vec3f shifted_normal = scale_vector(normal, 1e-3);
+	Vec3f reflection_origin = dot_product(reflection_direction, normal) < 0 ? hit_point - shifted_normal : hit_point + shifted_normal;
+	Vec3f reflection_color = cast_ray(reflection_origin, reflection_direction, spheres, lights, depth + 1);
 
 	float diffuse_light_intensity = 0;
 	float specular_light_intensity = 0;
@@ -53,7 +58,8 @@ Vec3f Raytracer::cast_ray(const Vec3f& ray_origin, const Vec3f& direction, const
 	Vec3f specular_lighting(1.0f, 1.0f, 1.0f);
 	specular_lighting = scale_vector(specular_lighting, specular_light_intensity);
 	specular_lighting = scale_vector(specular_lighting, material.get_albedo().y);
-	return diffused_lighting + specular_lighting;
+	reflection_color = scale_vector(reflection_color, material.get_albedo().z);
+	return diffused_lighting + specular_lighting + reflection_color;
 }
 
 bool Raytracer::is_shadowed(const Vec3f& light_direction, const float& light_distance, const Vec3f& hit_point, const Vec3f& normal, const std::vector<Sphere>& spheres) {

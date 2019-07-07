@@ -5,14 +5,17 @@
 #include <geometry.h>
 
 int main() {
-	Material ivory(Vec3f(0.4, 0.4, 0.3), Vec2f(0.6, 0.3), 50.0f);
-	Material red_rubber(Vec3f(0.3, 0.1, 0.1), Vec2f(0.9, 0.1), 10.0f);
+	Material ivory(Vec3f(0.4, 0.4, 0.3), Vec3f(0.6, 0.3, 0.1), 50.0f);
+	Material red_rubber(Vec3f(0.3, 0.1, 0.1), Vec3f(0.9, 0.1, 0.0), 10.0f);
+	Material mirror(Vec3f(1.0, 1.0, 1.0), Vec3f(0, 10.0, 0.8), 1425.0f);
 
 	std::vector<Sphere> spheres;
-	spheres.emplace_back(Sphere(Vec3f(-3, 0, -9), 2, ivory));
-	spheres.emplace_back(Sphere(Vec3f(-1.0, -1.5, -12), 2, red_rubber));
-	spheres.emplace_back(Sphere(Vec3f(1.5, -0.5, -18), 3, red_rubber));
-	spheres.emplace_back(Sphere(Vec3f(7, 5, -18), 4, ivory));
+	spheres.emplace_back(Sphere(Vec3f(-10, 0, -20), 3, ivory));
+	spheres.emplace_back(Sphere(Vec3f(5.0, 7, -15), 5, mirror));
+	spheres.emplace_back(Sphere(Vec3f(-2, -5, -20), 3, red_rubber));
+	spheres.emplace_back(Sphere(Vec3f(-8, -3, -25), 3, mirror));
+	spheres.emplace_back(Sphere(Vec3f(0, 10, -30), 4, mirror));
+	spheres.emplace_back(Sphere(Vec3f(5, -3, -10), 3, red_rubber));
 
 	std::vector<Light> lights;
 	lights.emplace_back(Vec3f(-20, 20, 20), 1.5);
