@@ -1,5 +1,11 @@
 # Raytracer
 
+# Reflections
+
+![Alt text](/screenshots/Reflections.png?raw=true "First use of reflections and mirror material")
+
+Spheres with a fully reflective mirror material.
+
 # Shadowing
 
 ![Alt text](/screenshots/FirstShadows.png?raw=true "Shadows completed!")
