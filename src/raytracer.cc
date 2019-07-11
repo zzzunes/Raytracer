@@ -4,6 +4,9 @@
 #include <geometry.h>
 #include <sphere.h>
 #include <light.h>
+#include <memory>
+#include <intersection.h>
+#include "ray.h"
 
 #define WIDTH 1280
 #define HEIGHT 720
@@ -16,7 +19,7 @@ float Raytracer::dot_product(const Vec3f& vector_one, const Vec3f& vector_two) {
 	return vector_one * vector_two;
 }
 
-Vec3f Raytracer::scale_vector(const Vec3f& vector, const float& scalar) {
+Vec3f Raytracer::scale_vector(const Vec3f& vector, float scalar) {
 	return vector * scalar;
 }
 
@@ -27,64 +30,71 @@ Vec3f Raytracer::reflect(const Vec3f& surface_to_light, const Vec3f& surface_nor
 	return reflection_direction;
 }
 
-Vec3f Raytracer::cast_ray(const Vec3f& ray_origin, const Vec3f& direction, const std::vector<Sphere>& spheres, const std::vector<Light>& lights, int depth = 0) {
-	Vec3f hit_point;
+Vec3f Raytracer::cast_ray(Ray& ray, const std::vector<Sphere>& spheres, const std::vector<Light>& lights, int depth = 0) {
+    Vec3f hit_point;
 	Vec3f normal;
 	Material material;
+    Intersection intersection(hit_point, normal, material);
 
-	if (depth > 4 || !scene_intersect(ray_origin, direction, spheres, hit_point, normal, material)) return BACKGROUND_COLOR;
+	if (depth > 5 || !scene_intersect(ray, intersection, spheres)) return BACKGROUND_COLOR;
 
-	Vec3f reflection_direction = reflect(direction, normal);
-	Vec3f shifted_normal = scale_vector(normal, 1e-3);
-	Vec3f reflection_origin = dot_product(reflection_direction, normal) < 0 ? hit_point - shifted_normal : hit_point + shifted_normal;
-	Vec3f reflection_color = cast_ray(reflection_origin, reflection_direction, spheres, lights, depth + 1);
+	Vec3f reflection_direction = reflect(ray.get_direction(), intersection.get_normal());
+	Vec3f shifted_normal = scale_vector(intersection.get_normal(), 1e-3);
+	Vec3f reflection_origin = dot_product(reflection_direction, intersection.get_normal()) < 0 ?
+	        intersection.get_hit_point() - shifted_normal : intersection.get_hit_point() + shifted_normal;
+	Ray reflected_ray(reflection_origin, reflection_direction);
+	Vec3f reflection_color = cast_ray(reflected_ray, spheres, lights, depth + 1);
 
 	float diffuse_light_intensity = 0;
 	float specular_light_intensity = 0;
 	for (Light light : lights) {
-		Vec3f light_direction = (light.get_position() - hit_point).normalize();
-		float light_distance = (light.get_position() - hit_point).norm();
+		if (is_shadowed(light, intersection, spheres)) continue;
 
-		if (is_shadowed(light_direction, light_distance, hit_point, normal, spheres)) continue;
-
-		diffuse_light_intensity += light.get_intensity() * std::max(0.0f, dot_product(light_direction, normal));
-		Vec3f reflected_direction = reflect(light_direction, normal);
-		float reflection_amount = dot_product(reflected_direction, direction);
-		specular_light_intensity += powf(std::max(0.0f, reflection_amount), material.get_specular_exponent()) * light.get_intensity();
+        Vec3f light_direction = (light.get_position() - intersection.get_hit_point()).normalize();
+		diffuse_light_intensity += light.get_intensity() * std::max(0.0f, dot_product(light_direction, intersection.get_normal()));
+		Vec3f reflected_direction = reflect(light_direction, intersection.get_normal());
+		float reflection_amount = dot_product(reflected_direction, ray.get_direction());
+		specular_light_intensity += powf(std::max(0.0f, reflection_amount),
+		        intersection.get_material().get_specular_exponent()) * light.get_intensity();
 	}
-	Vec3f diffused_lighting = material.get_diffuse_color();
+	Vec3f diffused_lighting = intersection.get_material().get_diffuse_color();
 	diffused_lighting = scale_vector(diffused_lighting, diffuse_light_intensity);
-	diffused_lighting = scale_vector(diffused_lighting, material.get_albedo().x);
+	diffused_lighting = scale_vector(diffused_lighting, intersection.get_material().get_albedo().x);
 	Vec3f specular_lighting(1.0f, 1.0f, 1.0f);
 	specular_lighting = scale_vector(specular_lighting, specular_light_intensity);
-	specular_lighting = scale_vector(specular_lighting, material.get_albedo().y);
-	reflection_color = scale_vector(reflection_color, material.get_albedo().z);
+	specular_lighting = scale_vector(specular_lighting, intersection.get_material().get_albedo().y);
+	reflection_color = scale_vector(reflection_color, intersection.get_material().get_albedo().z);
 	return diffused_lighting + specular_lighting + reflection_color;
 }
 
-bool Raytracer::is_shadowed(const Vec3f& light_direction, const float& light_distance, const Vec3f& hit_point, const Vec3f& normal, const std::vector<Sphere>& spheres) {
+bool Raytracer::is_shadowed(Light& light, Intersection& intersection, const std::vector<Sphere>& spheres) {
 	/* The purpose of gently shifting the origin is to avoid intersecting with our object at our origin point. */
-	bool light_and_normal_in_same_direction = dot_product(light_direction, normal) > 0;
-	Vec3f shifted_normal = scale_vector(normal, 1e-3);
-	Vec3f shadow_origin = light_and_normal_in_same_direction ? hit_point + shifted_normal : hit_point - shifted_normal;
+    Vec3f light_direction = (light.get_position() - intersection.get_hit_point()).normalize();
+    float light_distance = (light.get_position() - intersection.get_hit_point()).norm();
+
+	bool light_and_normal_in_same_direction = dot_product(light_direction, intersection.get_normal()) > 0;
+	Vec3f shifted_normal = scale_vector(intersection.get_normal(), 1e-3);
+	Vec3f shadow_origin = light_and_normal_in_same_direction ? intersection.get_hit_point() + shifted_normal : intersection.get_hit_point() - shifted_normal;
+    Ray shadow_ray(shadow_origin, light_direction);
 
 	Vec3f shadow_point;
 	Vec3f shadow_normal;
 	Material tmp_material;
-	return scene_intersect(shadow_origin, light_direction, spheres, shadow_point, shadow_normal, tmp_material) &&
-		   (shadow_point - shadow_origin).norm() < light_distance;
+    Intersection shadow_hit_point(shadow_point, shadow_normal, tmp_material);
+	return scene_intersect(shadow_ray, shadow_hit_point, spheres) &&
+		   (shadow_hit_point.get_hit_point() - shadow_ray.get_origin()).norm() < light_distance;
 }
 
-bool Raytracer::scene_intersect(const Vec3f& ray_origin, const Vec3f& direction, const std::vector<Sphere>& spheres, Vec3f& hit, Vec3f& normal, Material& material) {
+bool Raytracer::scene_intersect(Ray& ray, Intersection& intersection, const std::vector<Sphere>& spheres) {
 	float farthest_objects_distance = std::numeric_limits<float>::max();
 	for (Sphere sphere : spheres) {
 		float current_object_distance;
-		bool object_is_rendered = sphere.ray_intersect(ray_origin, direction, current_object_distance);
+		bool object_is_rendered = sphere.ray_intersect(ray, current_object_distance);
 		if (object_is_rendered && current_object_distance < farthest_objects_distance) {
 			farthest_objects_distance = current_object_distance;
-			hit = ray_origin + (scale_vector(direction, current_object_distance));
-			normal = (hit - sphere.get_center()).normalize();
-			material = sphere.get_material();
+			intersection.set_hit_point(ray.get_origin() + (scale_vector(ray.get_direction(), current_object_distance)));
+			intersection.set_normal((intersection.get_hit_point() - sphere.get_center()).normalize());
+			intersection.set_material(sphere.get_material());
 		}
 	}
 	return farthest_objects_distance < std::numeric_limits<float>::max();
@@ -99,7 +109,8 @@ void Raytracer::render(const std::vector<Sphere>& objects, const std::vector<Lig
 
 			Vec3f ray_origin(0, 0, 0);
 			Vec3f direction = Vec3f(ray_x, ray_y, -1).normalize();
-			Vec3f color_result = cast_ray(ray_origin, direction, objects, lights);
+			Ray current_ray(ray_origin, direction);
+			Vec3f color_result = cast_ray(current_ray, objects, lights);
 			framebuffer[j + (i * WIDTH)] = color_result;
 		}
 	}

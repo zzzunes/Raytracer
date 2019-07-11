@@ -2,9 +2,9 @@
 #include <sphere.h>
 #include <raytracer.h>
 
-bool Sphere::ray_intersect(const Vec3f& ray_origin, const Vec3f& direction, float& sphere_distance) const {
-	Vec3f ray_origin_to_sphere_center = this->center - ray_origin;
-	float distance = Raytracer::dot_product(ray_origin_to_sphere_center, direction);
+bool Sphere::ray_intersect(Ray& ray, float& sphere_distance) const {
+	Vec3f ray_origin_to_sphere_center = this->center - ray.get_origin();
+	float distance = Raytracer::dot_product(ray_origin_to_sphere_center, ray.get_direction());
 
 	float hypotenuse_squared = Raytracer::dot_product(ray_origin_to_sphere_center, ray_origin_to_sphere_center);
 	float distance_squared = distance * distance;
