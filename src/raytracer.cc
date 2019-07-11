@@ -31,10 +31,10 @@ Vec3f Raytracer::reflect(const Vec3f& surface_to_light, const Vec3f& surface_nor
 }
 
 Vec3f Raytracer::cast_ray(Ray& ray, const std::vector<Sphere>& spheres, const std::vector<Light>& lights, int depth = 0) {
-    Vec3f hit_point;
+	Vec3f hit_point;
 	Vec3f normal;
 	Material material;
-    Intersection intersection(hit_point, normal, material);
+	Intersection intersection(hit_point, normal, material);
 
 	if (depth > 5 || !scene_intersect(ray, intersection, spheres)) return BACKGROUND_COLOR;
 
@@ -69,18 +69,18 @@ Vec3f Raytracer::cast_ray(Ray& ray, const std::vector<Sphere>& spheres, const st
 
 bool Raytracer::is_shadowed(Light& light, Intersection& intersection, const std::vector<Sphere>& spheres) {
 	/* The purpose of gently shifting the origin is to avoid intersecting with our object at our origin point. */
-    Vec3f light_direction = (light.get_position() - intersection.get_hit_point()).normalize();
-    float light_distance = (light.get_position() - intersection.get_hit_point()).norm();
+	Vec3f light_direction = (light.get_position() - intersection.get_hit_point()).normalize();
+	float light_distance = (light.get_position() - intersection.get_hit_point()).norm();
 
 	bool light_and_normal_in_same_direction = dot_product(light_direction, intersection.get_normal()) > 0;
 	Vec3f shifted_normal = scale_vector(intersection.get_normal(), 1e-3);
 	Vec3f shadow_origin = light_and_normal_in_same_direction ? intersection.get_hit_point() + shifted_normal : intersection.get_hit_point() - shifted_normal;
-    Ray shadow_ray(shadow_origin, light_direction);
+	Ray shadow_ray(shadow_origin, light_direction);
 
 	Vec3f shadow_point;
 	Vec3f shadow_normal;
 	Material tmp_material;
-    Intersection shadow_hit_point(shadow_point, shadow_normal, tmp_material);
+	Intersection shadow_hit_point(shadow_point, shadow_normal, tmp_material);
 	return scene_intersect(shadow_ray, shadow_hit_point, spheres) &&
 		   (shadow_hit_point.get_hit_point() - shadow_ray.get_origin()).norm() < light_distance;
 }
