@@ -1,5 +1,22 @@
 # Raytracer
 
+To build the project, run the following commands:
+
+``$ git clone https://github.com/Jragoon/Raytracer``
+
+``$ cd Raytracer``
+
+``$ mkdir build``
+
+``$ cmake ..``
+
+``$ make``
+
+Then, run the Raytracer to generate the image:
+``./Raytracer``
+
+The result will be a file called ``output.ppm`` in the same directory.
+
 # Reflections
 
 ![Alt text](/screenshots/Reflections.png?raw=true "First use of reflections and mirror material")
