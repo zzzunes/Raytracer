@@ -6,6 +6,7 @@
 #include <light.h>
 #include <memory>
 #include <intersection.h>
+#include <pthread.h>
 #include "ray.h"
 
 #define WIDTH 1280
@@ -14,6 +15,9 @@
 #define FOV (M_PI / 2.0)
 #define PPM_COLUMNS 3
 #define BACKGROUND_COLOR Vec3f(0.1, 0.2, 0.4);
+#define NUM_THREADS 20
+
+std::vector<Vec3f> framebuffer(SCREEN_SIZE);
 
 float Raytracer::dot_product(const Vec3f& vector_one, const Vec3f& vector_two) {
 	return vector_one * vector_two;
@@ -30,25 +34,25 @@ Vec3f Raytracer::reflect(const Vec3f& surface_to_light, const Vec3f& surface_nor
 	return reflection_direction;
 }
 
-Vec3f Raytracer::cast_ray(Ray& ray, const std::vector<Sphere>& spheres, const std::vector<Light>& lights, int depth = 0) {
+Vec3f Raytracer::cast_ray(Ray& ray, int depth = 0) {
 	Vec3f hit_point;
 	Vec3f normal;
 	Material material;
 	Intersection intersection(hit_point, normal, material);
 
-	if (depth > 5 || !scene_intersect(ray, intersection, spheres)) return BACKGROUND_COLOR;
+	if (depth > 5 || !scene_intersect(ray, intersection, objects)) return BACKGROUND_COLOR;
 
 	Vec3f reflection_direction = reflect(ray.get_direction(), intersection.get_normal());
 	Vec3f shifted_normal = scale_vector(intersection.get_normal(), 1e-3);
 	Vec3f reflection_origin = dot_product(reflection_direction, intersection.get_normal()) < 0 ?
 	        intersection.get_hit_point() - shifted_normal : intersection.get_hit_point() + shifted_normal;
 	Ray reflected_ray(reflection_origin, reflection_direction);
-	Vec3f reflection_color = cast_ray(reflected_ray, spheres, lights, depth + 1);
+	Vec3f reflection_color = cast_ray(reflected_ray, depth + 1);
 
 	float diffuse_light_intensity = 0;
 	float specular_light_intensity = 0;
 	for (Light light : lights) {
-		if (is_shadowed(light, intersection, spheres)) continue;
+		if (is_shadowed(light, intersection, objects)) continue;
 
         Vec3f light_direction = (light.get_position() - intersection.get_hit_point()).normalize();
 		diffuse_light_intensity += light.get_intensity() * std::max(0.0f, dot_product(light_direction, intersection.get_normal()));
@@ -100,9 +104,12 @@ bool Raytracer::scene_intersect(Ray& ray, Intersection& intersection, const std:
 	return farthest_objects_distance < std::numeric_limits<float>::max();
 }
 
-void Raytracer::render(const std::vector<Sphere>& objects, const std::vector<Light>& lights) {
-	std::vector<Vec3f> framebuffer(SCREEN_SIZE);
-	for (int i = 0; i < HEIGHT; i++) {
+void* Raytracer::find_color(void* args) {
+	int id = *(int*) args;
+	int i = (HEIGHT / NUM_THREADS) * id;
+	int height_cap = i + (HEIGHT / NUM_THREADS);
+	printf("J: %d, Height Cap: %d\n", i, height_cap);
+	for (; i < height_cap; i++) {
 		for (int j = 0; j < WIDTH; j++) {
 			float ray_x = (2 * (j + 0.5) / (float) WIDTH - 1) * tan(FOV / 2.0) * WIDTH / (float) HEIGHT;
 			float ray_y = -(2 * (i + 0.5) / (float) HEIGHT - 1) * tan(FOV / 2.0);
@@ -110,9 +117,23 @@ void Raytracer::render(const std::vector<Sphere>& objects, const std::vector<Lig
 			Vec3f ray_origin(0, 0, 0);
 			Vec3f direction = Vec3f(ray_x, ray_y, -1).normalize();
 			Ray current_ray(ray_origin, direction);
-			Vec3f color_result = cast_ray(current_ray, objects, lights);
+			Vec3f color_result = cast_ray(current_ray);
 			framebuffer[j + (i * WIDTH)] = color_result;
 		}
+	}
+	return nullptr;
+}
+
+void Raytracer::render() {
+	framebuffer.clear();
+	pthread_t tid[NUM_THREADS];
+	int args[NUM_THREADS];
+	for (int i = 0; i < NUM_THREADS; i++) {
+		args[i] = i;
+		pthread_create(&tid[i], NULL, find_color, &args[i]);
+	}
+	for (int i = 0; i < NUM_THREADS; i++) {
+		pthread_join(tid[i], nullptr);
 	}
 	write_to_file(framebuffer);
 }
