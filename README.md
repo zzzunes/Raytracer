@@ -2,7 +2,7 @@
 
 To build the project, run the following commands:
 
-``$ git clone https://github.com/Jragoon/Raytracer``
+``$ git clone https://github.com/zzzunes/Raytracer``
 
 ``$ cd Raytracer``
 
